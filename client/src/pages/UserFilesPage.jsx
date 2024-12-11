@@ -22,21 +22,39 @@ const UserFilesPage = () => {
   }, [id]);
 
   const convertToEmbedUrl = (url) => {
-    const urlObj = new URL(url);
-    const videoId = urlObj.searchParams.get("v"); // Extract "v" parameter (video ID)
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-  };
+    if (!url) return null;
 
-  const getEmbedUrl = (url) => {
-    // Check if the URL already contains "embed"
-    if (url.includes("embed")) {
-      return url;
+    try {
+      const urlObj = new URL(url);
+
+      // Handle YouTube links
+      if (urlObj.hostname.includes("youtube.com")) {
+        const videoId = urlObj.searchParams.get("v");
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+      } else if (urlObj.hostname.includes("youtu.be")) {
+        const videoId = urlObj.pathname.slice(1); // Extract the path after "/"
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      // Handle Facebook links
+      if (urlObj.hostname.includes("facebook.com") && url.includes("/watch")) {
+        const videoId = urlObj.searchParams.get("v");
+        return videoId
+          ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+              `https://www.facebook.com/watch?v=${videoId}`
+            )}`
+          : null;
+      }
+
+      return null; // Unsupported URL
+    } catch (error) {
+      console.error("Invalid URL:", url, error);
+      return null;
     }
-    return convertToEmbedUrl(url);
   };
 
   const embedUrl = user?.uploadedFilePath
-    ? getEmbedUrl(user.uploadedFilePath)
+    ? convertToEmbedUrl(user.uploadedFilePath)
     : null;
 
   return (
@@ -47,12 +65,12 @@ const UserFilesPage = () => {
 
       <ul className="space-y-4">
         <li className="flex flex-col bg-white justify-center items-center shadow-md p-4 rounded-lg">
-          {/* Embed YouTube video if uploadedFilePath is valid */}
-          <div className="video-container ">
+          {/* Embed YouTube or Facebook video if uploadedFilePath is valid */}
+          <div className="video-container">
             {embedUrl ? (
               <iframe
                 src={embedUrl}
-                title="YouTube Video"
+                title="Video"
                 frameBorder="0"
                 className="md:h-[480px] md:w-[720px] h-[200px]"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -60,7 +78,7 @@ const UserFilesPage = () => {
               ></iframe>
             ) : (
               <p className="text-red-500 text-center">
-                Uploaded file is not a valid YouTube link.
+                Uploaded file is not a valid YouTube or Facebook link.
               </p>
             )}
           </div>
