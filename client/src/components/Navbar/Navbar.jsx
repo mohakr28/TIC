@@ -4,10 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 const Navbar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const uploaded = JSON.parse(localStorage.getItem("user")).uploadedFilePath;
+
+  // Safely get uploadedFilePath
+  const user = localStorage.getItem("user");
+  const uploaded = user ? JSON.parse(user).uploadedFilePath : null;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user"); // Optional: remove user info on logout
     navigate("/");
   };
 
@@ -30,10 +34,11 @@ const Navbar = () => {
                 <Link to="/upload" className="hover:text-blue-200 transition">
                   Upload
                 </Link>
-              ) : // <Link to="/upload" className="hover:text-blue-200 transition">
-              //   ReUpload
-              // </Link>
-              null}
+              ) : (
+                <Link to="/upload" className="hover:text-blue-200 transition">
+                  ReUpload
+                </Link>
+              )}
 
               <button
                 onClick={handleLogout}
