@@ -8,18 +8,7 @@ import { PiMicrosoftWordLogoFill } from "react-icons/pi";
 const UserFilesPage = () => {
   const { id } = useParams();
   const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUserFiles = async () => {
-      try {
-        const response = await axios.get(`${GLOBALS.SERVER}/api/users/${id}`);
-        setUser(response.data);
-      } catch (error) {
-        console.error("Error fetching user files:", error);
-      }
-    };
-    fetchUserFiles();
-  }, [id]);
+  const [embedUrl, setEmbedUrl] = useState(null);
 
   const convertToEmbedUrl = (url) => {
     if (!url) return null;
@@ -53,9 +42,22 @@ const UserFilesPage = () => {
     }
   };
 
-  const embedUrl = user?.uploadedFilePath
-    ? convertToEmbedUrl(user.uploadedFilePath)
-    : null;
+  useEffect(() => {
+    const fetchUserFiles = async () => {
+      try {
+        const response = await axios.get(`${GLOBALS.SERVER}/api/users/${id}`);
+        setUser(response.data);
+
+        // Set embed URL after fetching user data
+        if (response.data.uploadedFilePath) {
+          setEmbedUrl(convertToEmbedUrl(response.data.uploadedFilePath));
+        }
+      } catch (error) {
+        console.error("Error fetching user files:", error);
+      }
+    };
+    fetchUserFiles();
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
