@@ -49,9 +49,14 @@ const Navbar = () => {
             </>
           )}
           {!token && (
-            <Link to="/login" className="hover:text-blue-200 transition">
-              Login
-            </Link>
+            <>
+              <Link to="/login" className="hover:text-blue-200 transition">
+                Login
+              </Link>
+              <Link to="/register" className="hover:text-blue-200 transition">
+                register
+              </Link>
+            </>
           )}
         </div>
       </div>
