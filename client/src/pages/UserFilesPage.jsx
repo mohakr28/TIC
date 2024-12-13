@@ -17,10 +17,15 @@ const UserFilesPage = () => {
     try {
       const urlObj = new URL(url);
 
-      // Handle YouTube links
+      // Handle YouTube links (including Shorts)
       if (urlObj.hostname.includes("youtube.com")) {
-        const videoId = urlObj.searchParams.get("v");
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+        if (urlObj.pathname.startsWith("/shorts/")) {
+          const shortId = urlObj.pathname.split("/shorts/")[1];
+          return `https://www.youtube.com/embed/${shortId}`;
+        } else {
+          const videoId = urlObj.searchParams.get("v");
+          return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+        }
       } else if (urlObj.hostname.includes("youtu.be")) {
         const videoId = urlObj.pathname.slice(1); // Extract the path after "/"
         return `https://www.youtube.com/embed/${videoId}`;
