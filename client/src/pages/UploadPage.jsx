@@ -4,7 +4,8 @@ import { GLOBALS } from "../GLOBALS";
 import { useNavigate } from "react-router-dom";
 
 const UploadPage = () => {
-  const [fileUrl, setFileUrl] = useState(""); // New state for the file URL
+  const [fileUrl, setFileUrl] = useState(""); // New state for the video URL
+  const [imageFile, setImageFile] = useState(null); // New state for the image file
   const [link1, setLink1] = useState("");
   const [link2, setLink2] = useState("");
   const [message, setMessage] = useState("");
@@ -23,18 +24,21 @@ const UploadPage = () => {
       setIsSubmitting(true); // Prevent further submissions
       setMessage(""); // Clear previous messages
 
+      const formData = new FormData();
+      formData.append("fileUrl", fileUrl); // Append video URL
+      if (imageFile) {
+        formData.append("file", imageFile); // Append image file if exists
+      }
+      formData.append("externalFileUrl1", link1);
+      formData.append("externalFileUrl2", link2);
+
       // Send the data to the server
-      await axios.post(
-        GLOBALS.SERVER + "/api/upload/uploadproject",
-        {
-          fileUrl, // File URL instead of file upload
-          externalFileUrl1: link1,
-          externalFileUrl2: link2,
+      await axios.post(GLOBALS.SERVER + "/api/upload/uploadproject", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data", // Necessary for file uploads
         },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      });
 
       setMessage("Data submitted successfully!");
       setTimeout(() => {
@@ -81,15 +85,30 @@ const UploadPage = () => {
               className="block text-gray-600 font-medium"
               htmlFor="fileUrlInput"
             >
-              Youtube Video Link
+              Video Link
             </label>
             <input
               id="fileUrlInput"
               type="url"
-              placeholder="Enter the file link (video)"
+              placeholder="Enter the video link"
               value={fileUrl}
               onChange={(e) => setFileUrl(e.target.value)}
-              required
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              className="block text-gray-600 font-medium"
+              htmlFor="imageFileInput"
+            >
+              Upload Poster
+            </label>
+            <input
+              id="imageFileInput"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files[0])}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
