@@ -9,6 +9,7 @@ const UserFilesPage = () => {
   const { id } = useParams();
   const [user, setUser] = useState(null);
   const [embedUrl, setEmbedUrl] = useState(null);
+  const [isImage, setIsImage] = useState(false);
 
   const convertToEmbedUrl = (url) => {
     if (!url) return null;
@@ -42,15 +43,23 @@ const UserFilesPage = () => {
     }
   };
 
+  const isImageUrl = (url) => {
+    if (!url) return false;
+    return /\.(jpg|jpeg|png|gif|bmp|svg)$/i.test(url); // Check if URL ends with a valid image extension
+  };
+
   useEffect(() => {
     const fetchUserFiles = async () => {
       try {
         const response = await axios.get(`${GLOBALS.SERVER}/api/users/${id}`);
         setUser(response.data);
 
-        // Set embed URL after fetching user data
         if (response.data.uploadedFilePath) {
-          setEmbedUrl(convertToEmbedUrl(response.data.uploadedFilePath));
+          if (isImageUrl(response.data.uploadedFilePath)) {
+            setIsImage(true);
+          } else {
+            setEmbedUrl(convertToEmbedUrl(response.data.uploadedFilePath));
+          }
         }
       } catch (error) {
         console.error("Error fetching user files:", error);
@@ -67,9 +76,15 @@ const UserFilesPage = () => {
 
       <ul className="space-y-4">
         <li className="flex flex-col bg-white justify-center items-center shadow-md p-4 rounded-lg">
-          {/* Embed YouTube or Facebook video if uploadedFilePath is valid */}
-          <div className="video-container">
-            {embedUrl ? (
+          {/* Display uploaded image or embed YouTube/Facebook video */}
+          <div className="media-container">
+            {isImage ? (
+              <img
+                src={GLOBALS.SERVER + "/api/upload/" + user.uploadedFilePath}
+                alt="Uploaded"
+                className="max-w-full max-h-96 rounded-lg"
+              />
+            ) : embedUrl ? (
               <iframe
                 src={embedUrl}
                 title="Video"
@@ -80,7 +95,7 @@ const UserFilesPage = () => {
               ></iframe>
             ) : (
               <p className="text-red-500 text-center">
-                Uploaded file is not a valid YouTube or Facebook link.
+                Uploaded file is not a valid video or image link.
               </p>
             )}
           </div>
