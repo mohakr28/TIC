@@ -1,11 +1,10 @@
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
 
 // إعداد التخزين
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/files"); // مسار حفظ الملفات
+    cb(null, "uploads"); // مسار حفظ الصور
   },
   filename: (req, file, cb) => {
     const registrationNumber = req.user?.registrationNumber || "unknown";
@@ -14,17 +13,17 @@ const storage = multer.diskStorage({
   },
 });
 
-// فلترة الملفات
+// فلترة الصور فقط
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|mp4|mkv|avi|pdf|doc|docx|txt/;
+  const allowedTypes = /jpeg|jpg|png|gif/; // السماح بأنواع الصور فقط
   const isAllowed = allowedTypes.test(
     path.extname(file.originalname).toLowerCase()
   );
 
   if (isAllowed) {
-    cb(null, true);
+    cb(null, true); // قبول الملف
   } else {
-    cb(new Error("نوع الملف غير مسموح!"), false);
+    cb(null, false); // تجاهل الملف بدون خطأ
   }
 };
 
