@@ -40,17 +40,37 @@ exports.getUser = async (req, res) => {
 
 exports.getAllUsersWithProjects = async (req, res) => {
   try {
-    const users = await User.find().lean(); // Fetch all users from the database
+    const page = parseInt(req.query.page) || 1; // Current page, default to 1
+    const limit = parseInt(req.query.limit) || 3; // Items per page, default to 6
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
 
-    res.setHeader("Content-Type", "application/json");
-    res.status(200).json(users); // Send the users as a JSON response
+    const group = req.query.group || ""; // الحصول على المجموعة من المعاملات (اختياري)
+
+    // بناء التصفية بناءً على المجموعة (إذا كانت موجودة)
+    const filter = group ? { group } : {}; // إذا تم تحديد مجموعة، استخدمها في التصفية
+
+    // إجمالي عدد المستخدمين مع التصفية
+    const totalUsers = await User.countDocuments(filter);
+    // تحقق من العناصر المتبقية
+    const remainingUsers = totalUsers - skip;
+    const adjustedLimit = remainingUsers < limit ? remainingUsers : limit;
+
+    // Fetch paginated users with group filter
+    const users = await User.find(filter)
+      .skip(skip)
+      .limit(adjustedLimit)
+      .lean();
+
+    // Check if there are more users
+    const hasMore = skip + users.length < totalUsers;
+
+    res.status(200).json({ users, hasMore });
   } catch (err) {
     res
       .status(500)
       .json({ message: "حدث خطأ أثناء جلب البيانات", error: err.message });
   }
 };
-
 // بث الفيديو من السيرفر
 exports.streamVideo = async (req, res) => {
   try {
